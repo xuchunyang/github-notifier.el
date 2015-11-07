@@ -36,6 +36,12 @@ Normally, this is a number, however, nil means unknown by Emacs.")
   "Github Notifier"
   :group 'emacs)
 
+;;; FIXME: Even we use `url-retrieve' to retrieve network asynchronously, Emacs
+;;; still gets blocked frequently (?), especially when the network situation is
+;;; bad, once it blocks Emacs, you have to wait to it gets finised or interrupt
+;;; it by hitting C-g many times. This is very annoying.
+;;;
+;;; Maybe we can try to invoke curl(1) as asynchronous process.
 (defun github-notifier-update-cb (_status)
   (set-buffer-multibyte t)
   (goto-char (point-min))
