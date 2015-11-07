@@ -1,5 +1,7 @@
 * github-notifier
 
+  [[file:img.png]]
+
   =github-notifier= is a global minor-mode for Emacs that displays your GitHub
   notifications unread count in mode-line. It checks the GitHub Notifications
   API every minute.
