@@ -26,10 +26,12 @@
 
 (require 'json)
 
-(defvar github-notifier-unread-count nil
-  "Github notifications unread count.
-Normally, this is a number, however, nil means unknown by Emacs.")
+(defgroup github-notifier nil
+  "Github Notifier"
+  :group 'emacs)
 
+
+;;; Custom
 (defcustom github-notifier-token nil
   "Access token to get Github Notifications.
 
@@ -50,16 +52,58 @@ If nil, Github-Notifier will ask you and remember your token via
                  (const :tag "Ask me" nil))
   :group 'github-notifier)
 
-(defgroup github-notifier nil
-  "Github Notifier"
-  :group 'emacs)
+(defcustom github-notifier-mode-line
+  '(:eval
+    (let (unread-text help-text)
+      (cond ((null github-notifier-unread-count)
+             (setq unread-text "-?"
+                   help-text "The Github notifications number is unknown."))
+            ((zerop github-notifier-unread-count)
+             (setq unread-text ""
+                   help-text "Good job, you don't have unread notification."))
+            (t
+             (setq unread-text (format "-%d" github-notifier-unread-count)
+                   help-text (if (= github-notifier-unread-count 1)
+                                 "You have 1 unread notification.\nmouse-1 Read it on Github."
+                               (format "You have %d unread notifications.\nmouse-1 Read them on Github."
+                                       github-notifier-unread-count)))))
+      (propertize (concat " GH" unread-text)
+                  'help-echo help-text
+                  'local-map github-notifier-mode-line-map
+                  'mouse-face 'mode-line-highlight)))
+  "Mode line lighter for Github Notifier."
+  :type 'sexp
+  :group 'github-notifier)
 
-;;; FIXME: Even we use `url-retrieve' to retrieve network asynchronously, Emacs
-;;; still gets blocked frequently (?), especially when the network situation is
-;;; bad, once it blocks Emacs, you have to wait to it gets finised or interrupt
-;;; it by hitting C-g many times. This is very annoying.
-;;;
-;;; Maybe we can try to invoke curl(1) as asynchronous process.
+(defcustom github-notifier-update-interval 60
+  "Seconds after which the github notifications count will be updated."
+  :type 'integer
+  :group 'github-notifier)
+
+
+;;; Variables
+(defvar github-notifier-unread-count nil
+  "Github notifications unread count.
+Normally, this is a number, however, nil means unknown by Emacs.")
+
+(defvar github-notifier-mode-line-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mode-line mouse-1] 'github-notifier-visit-github)
+    map))
+
+(defvar github-notifier-mode-line-string nil
+  "String to display in the mode line.")
+(put 'github-notifier-mode-line-string 'risky-local-variable t)
+
+
+;;; Function
+
+;; FIXME: Even we use `url-retrieve' to retrieve network asynchronously, Emacs
+;; still gets blocked frequently (?), especially when the network situation is
+;; bad, once it blocks Emacs, you have to wait to it gets finised or interrupt
+;; it by hitting C-g many times. This is very annoying.
+;;
+;; Maybe we can try to invoke curl(1) as asynchronous process.
 (defun github-notifier-update-cb (_status)
   (set-buffer-multibyte t)
   (goto-char (point-min))
@@ -91,44 +135,12 @@ If nil, Github-Notifier will ask you and remember your token via
                     #'github-notifier-update-cb
                     nil t t))))
 
-(defvar github-notifier-mode-line-map (make-sparse-keymap))
-(define-key github-notifier-mode-line-map [mode-line mouse-1] 'github-notifier-visit-github)
-
 (defun github-notifier-visit-github ()
   (interactive)
   (browse-url "https://github.com/notifications"))
 
-(defcustom github-notifier-mode-line
-  '(:eval
-    (let (unread-text help-text)
-      (cond ((null github-notifier-unread-count)
-             (setq unread-text "-?"
-                   help-text "The Github notifications number is unknown."))
-            ((zerop github-notifier-unread-count)
-             (setq unread-text ""
-                   help-text "Good job, you don't have unread notification."))
-            (t
-             (setq unread-text (format "-%d" github-notifier-unread-count)
-                   help-text (if (= github-notifier-unread-count 1)
-                                 "You have 1 unread notification.\nmouse-1 Read it on Github."
-                               (format "You have %d unread notifications.\nmouse-1 Read them on Github."
-                                       github-notifier-unread-count)))))
-      (propertize (concat " GH" unread-text)
-                  'help-echo help-text
-                  'local-map github-notifier-mode-line-map
-                  'mouse-face 'mode-line-highlight)))
-  "Mode line lighter for Github Notifier."
-  :type 'sexp
-  :group 'github-notifier)
-
-(defcustom github-notifier-update-interval 60
-  "Seconds after which the github notifications count will be updated."
-  :type 'integer
-  :group 'github-notifier)
-
-(defvar github-notifier-mode-line-string nil
-  "String to display in the mode line.")
-(put 'github-notifier-mode-line-string 'risky-local-variable t)
+
+;;; Glboal Minor-mode
 
 ;;;###autoload
 (define-minor-mode github-notifier-mode
