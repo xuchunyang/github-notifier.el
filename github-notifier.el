@@ -30,7 +30,25 @@
   "Github notifications unread count.
 Normally, this is a number, however, nil means unknown by Emacs.")
 
-(defvar github-notifier-token nil)
+(defcustom github-notifier-token nil
+  "Access token to get Github Notifications.
+
+To generate an access token, visit
+URL `https://github.com/settings/tokens/new?scopes=notifications&description=github-notifier.el'
+
+This is similar to how erc or jabber handle authentication in
+emacs, but the following disclaimer always worth reminding.
+
+DISCLAIMER
+When you save this variable, DON'T WRITE IT ANYWHERE PUBLIC. This
+token grants (very) limited access to your account.
+END DISCLAIMER
+
+If nil, Github-Notifier will ask you and remember your token via
+`customize-save-variable'."
+  :type '(choice (string :tag "Token")
+                 (const :tag "Ask me" nil))
+  :group 'github-notifier)
 
 (defgroup github-notifier nil
   "Github Notifier"
@@ -125,6 +143,10 @@ the mode if ARG is omitted or nil."
   (if (not github-notifier-mode)
       (setq global-mode-string
             (delq 'github-notifier-mode-line-string global-mode-string))
+    (unless (stringp github-notifier-token)
+      (browse-url "https://github.com/settings/tokens/new?scopes=notifications&description=github-notifier.el")
+      (customize-save-variable 'github-notifier-token
+                               (read-string "Paste Your Access Token: ")))
     (add-to-list 'global-mode-string 'github-notifier-mode-line-string t)
     (github-notifier-update)
     (setq github-notifier-mode-line-string
