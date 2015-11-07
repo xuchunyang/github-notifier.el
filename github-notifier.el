@@ -69,9 +69,11 @@ Normally, this is a number, however, nil means unknown by Emacs.")
 
 ;;; TODO: Add keymap to open https://github.com/notifications
 (defcustom github-notifier-mode-line
-  '(:eval (concat " " (when (and github-notifier-unread-count
-                                  (> github-notifier-unread-count 0))
-                         (format "-%d" github-notifier-unread-count))))
+  '(:eval (concat " GH"
+                  (cond ((null github-notifier-unread-count) "-?")
+                        ((zerop github-notifier-unread-count) "")
+                        (t (format "-%d" github-notifier-unread-count)))
+                  " "))
   "Mode line lighter for Github Notifier."
   :type 'sexp
   :group 'github-notifier)
