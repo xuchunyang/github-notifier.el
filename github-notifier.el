@@ -37,19 +37,25 @@ Normally, this is a number, however, nil means unknown by Emacs.")
   :group 'emacs)
 
 (defun github-notifier-update-cb (_status)
-  ;; Debug
-  ;; (display-buffer (current-buffer))
   (set-buffer-multibyte t)
   (goto-char (point-min))
   (if (not (string-match "200 OK" (buffer-string)))
       (progn (message "Problem connecting to the server")
              (setq github-notifier-unread-count nil))
     (re-search-forward "^$" nil 'move)
-    (let (json-str)
+    (let (json-str (old-count github-notifier-unread-count))
       (setq json-str (buffer-substring-no-properties (point) (point-max)))
+      (setq github-notifier-unread-count (length (json-read-from-string json-str)))
+      (unless (equal old-count github-notifier-unread-count)
+        (force-mode-line-update t))
       ;; Debug
       ;; (setq a-json-string json-str)
-      (setq github-notifier-unread-count (length (json-read-from-string json-str)))))
+      ;; (message "Github notification %d unread, updated at %s"
+      ;;          github-notifier-unread-count (current-time-string))
+      ))
+  ;; Debug
+  ;; (display-buffer (current-buffer))
+  (kill-buffer)
   (run-at-time github-notifier-update-interval nil #'github-notifier-update))
 
 (defun github-notifier-update (&optional force)
@@ -61,13 +67,13 @@ Normally, this is a number, however, nil means unknown by Emacs.")
                     #'github-notifier-update-cb
                     nil t t))))
 
+;;; TODO: Add keymap to open https://github.com/notifications
 (defcustom github-notifier-mode-line
-  '(:eval (format " -%s" (if github-notifier-unread-count
-                              github-notifier-unread-count
-                            "?")))
+  '(:eval (concat " " (when (and github-notifier-unread-count
+                                  (> github-notifier-unread-count 0))
+                         (format "-%d" github-notifier-unread-count))))
   "Mode line lighter for Github Notifier."
   :type 'sexp
-  :risky t
   :group 'github-notifier)
 
 (defcustom github-notifier-update-interval 60
