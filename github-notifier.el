@@ -3,6 +3,7 @@
 ;; Copyright (C) 2015  Chunyang Xu
 
 ;; Author: Chunyang Xu <xuchunyang56@gmail.com>
+;; Package-Requires: ((emacs "24"))
 ;; Keywords: github, mode-line
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -20,7 +21,9 @@
 
 ;;; Commentary:
 
+;; This is a global minor-mode. Turn it on everywhere with:
 ;;
+;;   M-x github-notifier-mode
 
 ;;; Code:
 
