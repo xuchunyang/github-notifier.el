@@ -67,13 +67,32 @@ Normally, this is a number, however, nil means unknown by Emacs.")
                     #'github-notifier-update-cb
                     nil t t))))
 
-;;; TODO: Add keymap to open https://github.com/notifications
+(defvar github-notifier-mode-line-map (make-sparse-keymap))
+(define-key github-notifier-mode-line-map [mode-line mouse-1] 'github-notifier-visit-github)
+
+(defun github-notifier-visit-github ()
+  (interactive)
+  (browse-url "https://github.com/notifications"))
+
 (defcustom github-notifier-mode-line
-  '(:eval (concat " GH"
-                  (cond ((null github-notifier-unread-count) "-?")
-                        ((zerop github-notifier-unread-count) "")
-                        (t (format "-%d" github-notifier-unread-count)))
-                  " "))
+  '(:eval
+    (let (unread-text help-text)
+      (cond ((null github-notifier-unread-count)
+             (setq unread-text "-?"
+                   help-text "The Github notifications number is unknown."))
+            ((zerop github-notifier-unread-count)
+             (setq unread-text ""
+                   help-text "Good job, you don't have unread notification."))
+            (t
+             (setq unread-text (format "-%d" github-notifier-unread-count)
+                   help-text (if (= github-notifier-unread-count 1)
+                                 "You have 1 unread notification.\nmouse-1 Read it on Github."
+                               (format "You have %d unread notifications.\nmouse-1 Read them on Github."
+                                       github-notifier-unread-count)))))
+      (propertize (concat " GH" unread-text)
+                  'help-echo help-text
+                  'local-map github-notifier-mode-line-map
+                  'mouse-face 'mode-line-highlight)))
   "Mode line lighter for Github Notifier."
   :type 'sexp
   :group 'github-notifier)
