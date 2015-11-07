@@ -26,7 +26,9 @@
 
 (require 'json)
 
-(defvar github-notifier-unread-count 0)
+(defvar github-notifier-unread-count nil
+  "Github notifications unread count.
+Normally, this is a number, however, nil means unknown by Emacs.")
 
 (defvar github-notifier-token nil)
 
@@ -34,24 +36,35 @@
   "Github Notifier"
   :group 'emacs)
 
-(defun github-notifier-update ()
-  "Update `github-notifier-unread-count'."
-  (let ((url-request-extra-headers `(("Authorization" .
-                                      ,(format "token %s" github-notifier-token))))
-        json-str)
-    (with-current-buffer (url-retrieve-synchronously "https://api.github.com/notifications")
-      (goto-char (point-min))
-      (when (not (string-match "200 OK" (buffer-string)))
-        (error "Problem connecting to the server"))
-      (re-search-forward "^$" nil 'move)
+(defun github-notifier-update-cb (_status)
+  ;; Debug
+  ;; (display-buffer (current-buffer))
+  (set-buffer-multibyte t)
+  (goto-char (point-min))
+  (if (not (string-match "200 OK" (buffer-string)))
+      (progn (message "Problem connecting to the server")
+             (setq github-notifier-unread-count nil))
+    (re-search-forward "^$" nil 'move)
+    (let (json-str)
       (setq json-str (buffer-substring-no-properties (point) (point-max)))
       ;; Debug
-      ;; (progn (setq jj json-str) (l "%s" jj))
-      (kill-buffer))
-    (setq github-notifier-unread-count (length (json-read-from-string json-str)))))
+      ;; (setq a-json-string json-str)
+      (setq github-notifier-unread-count (length (json-read-from-string json-str)))))
+  (run-at-time github-notifier-update-interval nil #'github-notifier-update))
+
+(defun github-notifier-update (&optional force)
+  "Update `github-notifier-unread-count'."
+  (when (or force github-notifier-mode)
+    (let ((url-request-extra-headers `(("Authorization" .
+                                        ,(format "token %s" github-notifier-token)))))
+      (url-retrieve "https://api.github.com/notifications"
+                    #'github-notifier-update-cb
+                    nil t t))))
 
 (defcustom github-notifier-mode-line
-  '(:eval (format " -%d" github-notifier-unread-count))
+  '(:eval (format " -%s" (if github-notifier-unread-count
+                              github-notifier-unread-count
+                            "?")))
   "Mode line lighter for Github Notifier."
   :type 'sexp
   :risky t
@@ -66,13 +79,6 @@
   "String to display in the mode line.")
 (put 'github-notifier-mode-line-string 'risky-local-variable t)
 
-(defvar github-notifier-update-timer nil
-  "Interval timer object.")
-
-(defun github-notifier-update-handler ()
-  (github-notifier-update)
-  (sit-for 0))
-
 ;;;###autoload
 (define-minor-mode github-notifier-mode
   "Toggle github notifications count display in mode line (Github Notifier mode).
@@ -83,13 +89,10 @@ the mode if ARG is omitted or nil."
   (setq github-notifier-mode-line-string "")
   (unless global-mode-string
     (setq global-mode-string '("")))
-  (when github-notifier-update-timer (cancel-timer github-notifier-update-timer))
   (if (not github-notifier-mode)
       (setq global-mode-string
             (delq 'github-notifier-mode-line-string global-mode-string))
     (add-to-list 'global-mode-string 'github-notifier-mode-line-string t)
-    (setq github-notifier-update-timer (run-at-time nil github-notifier-update-interval
-                                                    'github-notifier-update-handler))
     (github-notifier-update)
     (setq github-notifier-mode-line-string
           github-notifier-mode-line)))
