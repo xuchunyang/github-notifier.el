@@ -152,16 +152,21 @@ With a prefix argument ARG, enable Github Notifier mode if ARG is
 positive, and disable it otherwise.  If called from Lisp, enable
 the mode if ARG is omitted or nil."
   :global t :group 'github-notifier
+  (unless (stringp github-notifier-token)
+    (browse-url "https://github.com/settings/tokens/new?scopes=notifications&description=github-notifier.el")
+    (let (token)
+      (unwind-protect
+          (setq token (read-string "Paste Your Access Token: "))
+        (if (stringp token)
+            (customize-save-variable 'github-notifier-token token)
+          (message "No Access Token")
+          (setq github-notifier-mode nil)))))
   (setq github-notifier-mode-line-string "")
   (unless global-mode-string
     (setq global-mode-string '("")))
   (if (not github-notifier-mode)
       (setq global-mode-string
             (delq 'github-notifier-mode-line-string global-mode-string))
-    (unless (stringp github-notifier-token)
-      (browse-url "https://github.com/settings/tokens/new?scopes=notifications&description=github-notifier.el")
-      (customize-save-variable 'github-notifier-token
-                               (read-string "Paste Your Access Token: ")))
     (add-to-list 'global-mode-string 'github-notifier-mode-line-string t)
     (github-notifier-update)
     (setq github-notifier-mode-line-string
