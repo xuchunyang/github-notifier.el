@@ -1,4 +1,4 @@
-* github-notifier
+* github-notifier [[http://melpa.org/#/github-notifier][file:http://melpa.org/packages/github-notifier-badge.svg]]
 
   [[file:img.png]]
 
