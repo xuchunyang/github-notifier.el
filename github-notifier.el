@@ -84,6 +84,11 @@ If nil, Github-Notifier will ask you and remember your token via
   :type 'integer
   :group 'github-notifier)
 
+(defcustom github-notifier-only-participating nil
+  "If non-nil, only counts notifications in which the user is directly participating or mentioned."
+  :type 'boolean
+  :group 'github-notifier)
+
 
 ;;; Variables
 (defvar github-notifier-unread-count nil
@@ -134,8 +139,11 @@ Normally, this is a number, however, nil means unknown by Emacs.")
   "Update `github-notifier-unread-count'."
   (when (or force github-notifier-mode)
     (let ((url-request-extra-headers `(("Authorization" .
-                                        ,(format "token %s" github-notifier-token)))))
-      (url-retrieve "https://api.github.com/notifications"
+                                        ,(format "token %s" github-notifier-token))))
+          (url (concat "https://api.github.com/notifications"
+                       (when github-notifier-only-participating
+                         "?participating=true"))))
+      (url-retrieve url
                     #'github-notifier-update-cb
                     nil t t))))
 
