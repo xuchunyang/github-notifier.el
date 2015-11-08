@@ -3,6 +3,7 @@
 ;; Copyright (C) 2015  Chunyang Xu
 
 ;; Author: Chunyang Xu <xuchunyang56@gmail.com>
+;; URL: https://github.com/xuchunyang/github-notifier.el
 ;; Package-Requires: ((emacs "24"))
 ;; Keywords: github, mode-line
 
