@@ -95,6 +95,9 @@ If nil, Github-Notifier will ask you and remember your token via
   "Github notifications unread count.
 Normally, this is a number, however, nil means unknown by Emacs.")
 
+(defvar github-notifier-unread-json nil
+  "JSON object contains latest (to github-notifier) unread notifications.")
+
 (defvar github-notifier-mode-line-map
   (let ((map (make-sparse-keymap)))
     (define-key map [mode-line mouse-1] 'github-notifier-visit-github)
@@ -121,8 +124,9 @@ Normally, this is a number, however, nil means unknown by Emacs.")
              (setq github-notifier-unread-count nil))
     (re-search-forward "^$" nil 'move)
     (let (json-str (old-count github-notifier-unread-count))
-      (setq json-str (buffer-substring-no-properties (point) (point-max)))
-      (setq github-notifier-unread-count (length (json-read-from-string json-str)))
+      (setq json-str (buffer-substring-no-properties (point) (point-max))
+            github-notifier-unread-json (json-read-from-string json-str))
+      (setq github-notifier-unread-count (length github-notifier-unread-json))
       (unless (equal old-count github-notifier-unread-count)
         (force-mode-line-update t))
       ;; Debug
