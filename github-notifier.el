@@ -28,6 +28,7 @@
 
 ;;; Code:
 
+(require 'url)
 (require 'json)
 
 (defgroup github-notifier nil
@@ -103,9 +104,7 @@ Normally, this is a number, however, nil means unknown by Emacs.")
     (define-key map [mode-line mouse-1] 'github-notifier-visit-github)
     map))
 
-(defvar github-notifier-mode-line-string nil
-  "String to display in the mode line.")
-(put 'github-notifier-mode-line-string 'risky-local-variable t)
+(put 'github-notifier-mode-line 'risky-local-variable t)
 
 
 ;;; Function
@@ -174,16 +173,13 @@ the mode if ARG is omitted or nil."
             (customize-save-variable 'github-notifier-token token)
           (message "No Access Token")
           (setq github-notifier-mode nil)))))
-  (setq github-notifier-mode-line-string "")
   (unless global-mode-string
     (setq global-mode-string '("")))
   (if (not github-notifier-mode)
       (setq global-mode-string
-            (delq 'github-notifier-mode-line-string global-mode-string))
-    (add-to-list 'global-mode-string 'github-notifier-mode-line-string t)
-    (github-notifier-update)
-    (setq github-notifier-mode-line-string
-          github-notifier-mode-line)))
+            (delq 'github-notifier-mode-line global-mode-string))
+    (add-to-list 'global-mode-string 'github-notifier-mode-line t)
+    (github-notifier-update)))
 
 (provide 'github-notifier)
 ;;; github-notifier.el ends here
