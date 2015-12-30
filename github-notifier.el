@@ -105,6 +105,8 @@ Normally, this is a number, however, nil means unknown by Emacs.")
     (define-key map [mode-line mouse-1] 'github-notifier-visit-github)
     map))
 
+(defvar github-notifier-update-timer nil)
+
 
 ;;; Function
 
@@ -135,7 +137,9 @@ Normally, this is a number, however, nil means unknown by Emacs.")
   ;; Debug
   ;; (display-buffer (current-buffer))
   (kill-buffer)
-  (run-at-time github-notifier-update-interval nil #'github-notifier-update))
+  (when github-notifier-mode
+    (setq github-notifier-update-timer
+          (run-at-time github-notifier-update-interval nil #'github-notifier-update))))
 
 (defun github-notifier-update (&optional force)
   "Update `github-notifier-unread-count'."
@@ -175,8 +179,12 @@ the mode if ARG is omitted or nil."
   (unless global-mode-string
     (setq global-mode-string '("")))
   (if (not github-notifier-mode)
-      (setq global-mode-string
-            (delq 'github-notifier-mode-line global-mode-string))
+      (progn
+        (setq global-mode-string
+              (delq 'github-notifier-mode-line global-mode-string))
+        (when github-notifier-update-timer
+          (cancel-timer github-notifier-update-timer)
+          (setq github-notifier-update-timer nil)))
     (add-to-list 'global-mode-string 'github-notifier-mode-line t)
     (github-notifier-update)))
 
