@@ -78,6 +78,7 @@ If nil, Github-Notifier will ask you and remember your token via
                   'mouse-face 'mode-line-highlight)))
   "Mode line lighter for Github Notifier."
   :type 'sexp
+  :risky t
   :group 'github-notifier)
 
 (defcustom github-notifier-update-interval 60
@@ -103,8 +104,6 @@ Normally, this is a number, however, nil means unknown by Emacs.")
   (let ((map (make-sparse-keymap)))
     (define-key map [mode-line mouse-1] 'github-notifier-visit-github)
     map))
-
-(put 'github-notifier-mode-line 'risky-local-variable t)
 
 
 ;;; Function
