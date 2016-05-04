@@ -92,6 +92,11 @@ If nil, Github-Notifier will ask you and remember your token via
   :type 'boolean
   :group 'github-notifier)
 
+(defcustom github-notifier-enterprise-domain nil
+  "Domain to Github installation.
+Can be overriden to support Enterprise installations"
+  :type 'string
+  :group 'github-notifier)
 
 ;;; Variables
 (defvar github-notifier-unread-count nil
@@ -110,6 +115,16 @@ Normally, this is a number, however, nil means unknown by Emacs.")
 
 
 ;;; Function
+(defun github-notifier-get-url (path &optional api-request)
+  "Get URL to Github endpoint.
+Get a url to PATH on Github or Github enterprise if
+`github-enterprise-domain' is set.  If API-REQUEST is true it
+will return an API."
+  (let ((url
+        (if github-notifier-enterprise-domain
+            (concat github-notifier-enterprise-domain (when api-request "/api/v3"))
+          (concat (when api-request "api.") "github.com"))))
+    (concat "https://" url path)))
 
 ;; FIXME: Even we use `url-retrieve' to retrieve network asynchronously, Emacs
 ;; still gets blocked frequently (?), especially when the network situation is
@@ -147,16 +162,16 @@ Normally, this is a number, however, nil means unknown by Emacs.")
   (when (or force github-notifier-mode)
     (let ((url-request-extra-headers `(("Authorization" .
                                         ,(format "token %s" github-notifier-token))))
-          (url (concat "https://api.github.com/notifications"
-                       (when github-notifier-only-participating
-                         "?participating=true"))))
+          (url (github-notifier-get-url (concat "/notifications"
+                                                (when github-notifier-only-participating
+                                                  "?participating=true")) t)))
       (url-retrieve url
                     #'github-notifier-update-cb
                     nil t t))))
 
 (defun github-notifier-visit-github ()
   (interactive)
-  (browse-url "https://github.com/notifications"))
+  (browse-url (github-notifier-get-url "/notifications")))
 
 
 ;;; Glboal Minor-mode
@@ -169,7 +184,7 @@ positive, and disable it otherwise.  If called from Lisp, enable
 the mode if ARG is omitted or nil."
   :global t :group 'github-notifier
   (unless (stringp github-notifier-token)
-    (browse-url "https://github.com/settings/tokens/new?scopes=notifications&description=github-notifier.el")
+    (browse-url (github-notifier-get-url "/settings/tokens/new?scopes=notifications&description=github-notifier.el"))
     (let (token)
       (unwind-protect
           (setq token (read-string "Paste Your Access Token: "))
