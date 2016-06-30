@@ -177,6 +177,9 @@ will return an API."
 ;;; Glboal Minor-mode
 
 ;;;###autoload
+(defalias 'github-notifier 'github-notifier-mode)
+
+;;;###autoload
 (define-minor-mode github-notifier-mode
   "Toggle github notifications count display in mode line (Github Notifier mode).
 With a prefix argument ARG, enable Github Notifier mode if ARG is
