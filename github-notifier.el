@@ -183,6 +183,11 @@ With a prefix argument ARG, enable Github Notifier mode if ARG is
 positive, and disable it otherwise.  If called from Lisp, enable
 the mode if ARG is omitted or nil."
   :global t :group 'github-notifier
+  (unless github-notifier-token
+    (setq github-notifier-token
+          (with-temp-buffer
+            (when (= 0 (call-process "git" nil t nil "config" "github.oauth-token"))
+              (buffer-substring 1 (progn (goto-char 1) (line-end-position)))))))
   (unless (stringp github-notifier-token)
     (browse-url (github-notifier-get-url "/settings/tokens/new?scopes=notifications&description=github-notifier.el"))
     (let (token)
