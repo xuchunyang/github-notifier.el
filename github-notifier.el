@@ -165,9 +165,13 @@ will return an API."
           (url (github-notifier-get-url (concat "/notifications"
                                                 (when github-notifier-only-participating
                                                   "?participating=true")) t)))
-      (url-retrieve url
-                    #'github-notifier-update-cb
-                    nil t t))))
+      (condition-case error-data
+          (url-retrieve url #'github-notifier-update-cb nil t t)
+        (error
+         (message "Error retrieving github notification from %s: %s" url error-data)
+         (when github-notifier-mode
+           (setq github-notifier-update-timer
+                 (run-at-time github-notifier-update-interval nil #'github-notifier-update))))))))
 
 (defun github-notifier-visit-github ()
   (interactive)
