@@ -36,7 +36,6 @@
   "Github Notifier"
   :group 'emacs)
 
-
 ;;; Custom
 (defcustom github-notifier-token nil
   "Access token to get Github Notifications.
@@ -68,7 +67,8 @@ If nil, Github-Notifier will ask you and remember your token via
              (setq unread-text ""
                    help-text "Good job, you don't have unread notification."))
             (t
-             (setq unread-text (format "-%d" github-notifier-unread-count)
+             (setq unread-text (format "-%d%s" github-notifier-unread-count
+				       (if (github-notifier-notifications-checked) "*" ""))
                    help-text (if (= github-notifier-unread-count 1)
                                  "You have 1 unread notification.\nmouse-1 Read it on Github."
                                (format "You have %d unread notifications.\nmouse-1 Read them on Github."
@@ -97,7 +97,7 @@ If nil, Github-Notifier will ask you and remember your token via
 Can be overriden to support Enterprise installations"
   :type 'string
   :group 'github-notifier)
-
+
 ;;; Variables
 (defvar github-notifier-unread-count nil
   "Github notifications unread count.
@@ -118,9 +118,10 @@ AFTER updating.")
     (define-key map [mode-line mouse-1] 'github-notifier-visit-github)
     map))
 
+(defvar github-notifier-last-notification nil)
+(defvar github-notifier-last-notification-checked nil)
 (defvar github-notifier-update-timer nil)
 
-
 ;;; Function
 (defun github-notifier-get-url (path &optional api-request)
   "Get URL to Github endpoint.
@@ -152,7 +153,10 @@ will return an API."
       (setq json-str (buffer-substring-no-properties (point) (point-max))
             github-notifier-unread-json (json-read-from-string json-str))
       (setq github-notifier-unread-count (length github-notifier-unread-json))
-      (unless (equal old-count github-notifier-unread-count)
+      (when (> github-notifier-unread-count 0)
+	(setq github-notifier-last-notification (cdr (assoc 'updated_at (elt github-notifier-unread-json 0)))))
+      (unless (and (equal old-count github-notifier-unread-count)
+		   (github-notifier-notifications-checked))
         (force-mode-line-update t))
       (run-hook-with-args 'github-notifier-update-hook old-json)
       ;; Debug
@@ -185,9 +189,15 @@ will return an API."
 
 (defun github-notifier-visit-github ()
   (interactive)
-  (browse-url (github-notifier-get-url "/notifications")))
+  (browse-url (github-notifier-get-url "/notifications"))
+  (setq github-notifier-last-notification-checked (format-time-string "%FT%TZ" (current-time) t))
+  (force-mode-line-update t))
 
-
+(defun github-notifier-notifications-checked ()
+  (and github-notifier-unread-count (> github-notifier-unread-count 0)
+       github-notifier-last-notification github-notifier-last-notification-checked
+       (string< github-notifier-last-notification github-notifier-last-notification-checked)))
+
 ;;; Glboal Minor-mode
 
 ;;;###autoload
