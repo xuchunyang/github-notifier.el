@@ -106,6 +106,13 @@ Normally, this is a number, however, nil means unknown by Emacs.")
 (defvar github-notifier-unread-json nil
   "JSON object contains latest (to github-notifier) unread notifications.")
 
+(defvar github-notifier-update-hook nil
+  "Run by `github-notifier-update-cb'.
+Functions added to this hook takes one argument, the unread
+notification json object BEFORE updating.  Accordingly,
+`github-notifier-unread-json' stores the unread notification json
+AFTER updating.")
+
 (defvar github-notifier-mode-line-map
   (let ((map (make-sparse-keymap)))
     (define-key map [mode-line mouse-1] 'github-notifier-visit-github)
@@ -139,12 +146,15 @@ will return an API."
       (progn (message "[github-notifier] Problem connecting to the server")
              (setq github-notifier-unread-count nil))
     (re-search-forward "^$" nil 'move)
-    (let (json-str (old-count github-notifier-unread-count))
+    (let (json-str
+          (old-count github-notifier-unread-count)
+          (old-json github-notifier-unread-json))
       (setq json-str (buffer-substring-no-properties (point) (point-max))
             github-notifier-unread-json (json-read-from-string json-str))
       (setq github-notifier-unread-count (length github-notifier-unread-json))
       (unless (equal old-count github-notifier-unread-count)
         (force-mode-line-update t))
+      (run-hook-with-args 'github-notifier-update-hook old-json)
       ;; Debug
       ;; (setq a-json-string json-str)
       ;; (message "Github notification %d unread, updated at %s"
