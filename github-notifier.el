@@ -203,7 +203,9 @@ the mode if ARG is omitted or nil."
   (unless github-notifier-token
     (setq github-notifier-token
           (with-temp-buffer
-            (when (= 0 (call-process "git" nil t nil "config" "github.oauth-token"))
+            (when (or
+                   (= 0 (call-process "git" nil t nil "config" "github-notifier.oauth-token"))
+                   (= 0 (call-process "git" nil t nil "config" "github.oauth-token")))
               (buffer-substring 1 (progn (goto-char 1) (line-end-position)))))))
   (unless (stringp github-notifier-token)
     (browse-url (github-notifier-get-url "/settings/tokens/new?scopes=notifications&description=github-notifier.el"))
