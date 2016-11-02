@@ -130,10 +130,10 @@ Get a url to PATH on Github or Github enterprise if
 `github-enterprise-domain' is set.  If API-REQUEST is true it
 will return an API."
   (let ((url
-        (if github-notifier-enterprise-domain
-            (concat github-notifier-enterprise-domain (when api-request "/api/v3"))
-          (concat (when api-request "api.") "github.com"))))
-    (concat (if (not(string-match "^http" url)) "https://") url path)))
+         (if github-notifier-enterprise-domain
+             (concat github-notifier-enterprise-domain (when api-request "/api/v3"))
+           (concat (when api-request "api.") "github.com"))))
+    (concat (if (not (string-match "^http" url)) "https://") url path)))
 
 ;; FIXME: Even we use `url-retrieve' to retrieve network asynchronously, Emacs
 ;; still gets blocked frequently (?), especially when the network situation is
