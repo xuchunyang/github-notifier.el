@@ -94,6 +94,7 @@ If nil, Github-Notifier will ask you and remember your token via
 
 (defcustom github-notifier-enterprise-domain nil
   "Domain to Github installation.
+It can also include 'http://' (if it doesn't, 'https://' is used).
 Can be overriden to support Enterprise installations"
   :type 'string
   :group 'github-notifier)
@@ -132,7 +133,7 @@ will return an API."
         (if github-notifier-enterprise-domain
             (concat github-notifier-enterprise-domain (when api-request "/api/v3"))
           (concat (when api-request "api.") "github.com"))))
-    (concat "https://" url path)))
+    (concat (if (not(string-match "^http" url)) "https://") url path)))
 
 ;; FIXME: Even we use `url-retrieve' to retrieve network asynchronously, Emacs
 ;; still gets blocked frequently (?), especially when the network situation is
