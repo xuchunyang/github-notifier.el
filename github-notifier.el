@@ -34,7 +34,7 @@
 
 (defgroup github-notifier nil
   "Github Notifier"
-  :group 'emacs)
+  :group 'comm)
 
 ;;; Custom
 (defcustom github-notifier-token nil
