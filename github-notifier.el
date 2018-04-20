@@ -190,7 +190,9 @@ will return an API."
 
 (defun github-notifier-visit-github ()
   (interactive)
-  (browse-url (github-notifier-get-url "/notifications"))
+  (if github-notifier-only-participating
+      (browse-url (github-notifier-get-url "notifications/participating"))
+    (browse-url (github-notifier-get-url "/notifications")))
   (setq github-notifier-last-notification-checked (format-time-string "%FT%TZ" (current-time) t))
   (force-mode-line-update t))
 
