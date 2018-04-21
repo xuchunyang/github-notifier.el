@@ -68,15 +68,16 @@ If nil, Github-Notifier will ask you and remember your token via
                    help-text "Good job, you don't have unread notification."))
             (t
              (setq unread-text (format "-%d%s" github-notifier-unread-count
-				       (if (github-notifier-notifications-checked) "*" ""))
+				                               (if (github-notifier-notifications-checked) "*" ""))
                    help-text (if (= github-notifier-unread-count 1)
                                  "You have 1 unread notification.\nmouse-1 Read it on Github."
                                (format "You have %d unread notifications.\nmouse-1 Read them on Github."
                                        github-notifier-unread-count)))))
-      (propertize (concat " GH" unread-text)
-                  'help-echo help-text
-                  'local-map github-notifier-mode-line-map
-                  'mouse-face 'mode-line-highlight)))
+      (when (> github-notifier-unread-count 0)
+        (propertize (concat " GH" unread-text)
+                    'help-echo help-text
+                    'local-map github-notifier-mode-line-map
+                    'mouse-face 'mode-line-highlight))))
   "Mode line lighter for Github Notifier."
   :type 'sexp
   :risky t
@@ -190,7 +191,9 @@ will return an API."
 
 (defun github-notifier-visit-github ()
   (interactive)
-  (browse-url (github-notifier-get-url "/notifications"))
+  (if github-notifier-only-participating
+      (browse-url (github-notifier-get-url "notifications/participating"))
+    (browse-url (github-notifier-get-url "/notifications")))
   (setq github-notifier-last-notification-checked (format-time-string "%FT%TZ" (current-time) t))
   (force-mode-line-update t))
 
